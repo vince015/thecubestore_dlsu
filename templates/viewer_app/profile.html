@@ -1,0 +1,358 @@
+{% extends "viewer_app/base.html" %}
+
+{% load staticfiles %}
+{% block pagetitle %}Profile{% endblock %}
+
+{% block navbarmenu %}
+<div class="navbar-custom-menu">
+    <ul class="nav navbar-nav">
+        <li>
+            <a href="{% url 'profile' %}">{{ user.username }}</a>
+        </li>
+        <li>
+            <a href="{% url 'viewer_logout' %}"><i class="fa fa-sign-out"></i></a>
+        </li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block breadcrumb %}
+<h1>
+    Profile
+</h1>
+<ol class="breadcrumb">
+    <li class="active">Profile</li>
+</ol>
+{% endblock %}
+
+{% block main %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="box box-primary">
+            <div class="box-body box-profile">
+                <h3 class="profile-username text-center">{{ profile.first_name }} {{ profile.last_name }}</h3>
+
+                <p class="text-primary text-center">Store:
+                    <b>{{ store.name }}</b>
+                </p>
+                <p class="text-muted text-center">Merchant ID: {{ profile.merchant_id }}</p>
+            </div>
+        </div>
+
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">Info</h3>
+            </div>
+            <div class="box-body">
+                <strong><i class="fa fa-mobile margin-r-5"></i> Contact Number</strong>
+                <p class="text-muted">
+                    {{ contact.contact_number }}
+                </p>
+
+                {% if profile.email %}
+                    <strong><i class="fa fa-at margin-r-5"></i> E-mail</strong>
+                    <p class="text-muted">
+                        {{ profile.email }}
+                    </p>
+                {% endif %}
+
+                {% if profile.primary_address %}
+                    <strong><i class="fa fa-map-marker margin-r-5"></i> Primary Address</strong>
+                    <p class="text-muted">
+                        {{ contact.primary_address }}
+                    </p>
+                {% endif %}
+
+                {% if profile.alternate_address %}
+                    <strong><i class="fa fa-map-marker margin-r-5"></i> Alternate Address</strong>
+                    <p class="text-muted">
+                        {{ contact.alternate_address }}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">Socials</h3>
+            </div>
+            <div class="box-body">
+                {% if store.facebook or store.instagram or store.website %}
+                    {% if store.facebook %}
+                        <strong><i class="fa fa-facebook margin-r-5"></i> Facebook</strong>
+                        <p class="text-muted">{{ store.facebook }}</p>
+                    {% endif %}
+
+                    {% if store.instagram%}
+                        <strong><i class="fa fa-instagram margin-r-5"></i> Instagram</strong>
+                        <p class="text-muted">{{ store.instagram }}</p>
+                    {% endif %}
+
+                    {% if store.website %}
+                        <strong><i class="fa fa-globe margin-r-5"></i> Website</strong>
+                        <p class="text-muted">{{ store.website }}</p>
+                    {% endif %}
+
+                {% else %}
+                <i class="muted-text">None</i>
+                {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="box box-primary">
+            <div class="box-header with-border">
+                <h3 class="box-title">Bank Details</h3>
+            </div>
+            <div class="box-body">
+                <strong><i class="fa fa-bank margin-r-5"></i> Bank</strong>
+                <p class="text-muted">
+                    {{ bank.bank }}
+                </p>
+
+                <strong><i class="fa fa-money margin-r-5"></i> Account</strong>
+                <p class="text-muted" style="overflow:hidden;">
+                    {{ bank.account }}
+                </p>
+
+                <strong><i class="fa fa-handshake-o margin-r-5"></i> Owner</strong>
+                <p class="text-muted">
+                    {{ bank.owner }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#sales" data-toggle="tab">Sales</a></li>
+                <li><a href="#payout" data-toggle="tab">Payouts</a></li>
+                <li><a href="#cube" data-toggle="tab">Cubes</a></li>
+                <li><a href="#item" data-toggle="tab">Items</a></li>
+            </ul>
+            <div class="active tab-content">
+                <div id="sales" class="active tab-pane">
+                    <div class="col-lg-12 col-xs-12 ">
+                        <div class="small-box bg-blue">
+                            <div class="inner">
+                                <h3>{{ unpaid }}<sup style="font-size: 20px">Php</sup></h3>
+                                <p>Unpaid Sales</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-cash"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table id="sales_table" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Date</th>
+                                <th>Quantity</th>
+                                <th>Gross</th>
+                                <th>Net</th>
+                                <th>Payout</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales %}
+                            <tr>
+                                <td>
+                                    {{ sale.item }}
+                                </td>
+                                <td>
+                                    {{ sale.date|date:'Y-m-d' }}
+                                </td>
+                                <td>
+                                    {{ sale.quantity }}
+                                </td>
+                                <td>
+                                    {{ sale.gross }}
+                                </td>
+                                <td>
+                                    {{ sale.net }}
+                                </td>
+                                <td>
+                                    {% if sale.payout %}
+                                        <a href="{% url 'view_payout' payout_id=sale.payout %}">
+                                            <b>{{ sale.payout }}</b>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">Unpaid</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor%}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="payout" class="tab-pane">
+                    <div class="col-lg-12 col-xs-12">
+                        <!-- small box -->
+                        <div class="small-box bg-aqua">
+                            <div class="inner">
+                                <h3>{{ earnings }}<sup style="font-size: 20px">Php</sup></h3>
+                                <p>Total Payouts</p>
+                            </div>
+                            <div class="icon">
+                                <i class="ion ion-stats-bars"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table id="payout_table" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Reference No.</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payout in payouts %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'view_payout' payout_id=payout.id %}">
+                                        {{ payout.reference_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {{ payout.date|date:'Y-m-d' }}
+                                </td>
+                                <td>
+                                    {{ payout.amount }}
+                                </td>
+                            </tr>
+                            {% endfor%}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="cube" class="tab-pane">
+                    <table id="cube_table" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Unit</th>
+                                <th>Next Due Date</th>
+                                <th>Monthly Rate</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cube in cubes %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'view_cube' cube_id=cube.id %}">
+                                        {{ cube.unit }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {{ cube.next_due_date|date:'Y-m-d' }}
+                                </td>
+                                <td>
+                                    {{ cube.rate }}
+                                </td>
+                                <td>
+                                    {{ cube.start_date|date:'Y-m-d' }}
+                                </td>
+                                <td>
+                                    {{ cube.end_date|date:'Y-m-d' }}
+                                </td>
+                            </tr>
+                            {% endfor%}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="item" class="tab-pane">
+                    <table id="item_table" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Cube</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'view_item' item_id=item.id %}">
+                                            {{ item.code }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {{ item.description }}
+                                    </td>
+                                    <td>
+                                        {{ item.quantity }}
+                                    </td>
+                                    <td>
+                                        {{ item.price }}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'view_cube' cube_id=item.cube.id %}">
+                                            {{ item.cube.unit }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor%}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block pagescripts %}
+<script src="{% static "bower_components/datatables.net/js/jquery.dataTables.min.js" %}"></script>
+<script src="{% static "bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
+<script>
+    $(function () {
+        $('#cube_table').DataTable({
+            'paging'      : true,
+            'lengthChange': false,
+            'searching'   : false,
+            'ordering'    : true,
+            'info'        : true,
+            'autoWidth'   : false,
+            'order'       : [[1, 'desc']]
+        });
+        $('#payout_table').DataTable({
+            'paging'      : true,
+            'lengthChange': false,
+            'searching'   : false,
+            'ordering'    : true,
+            'info'        : true,
+            'autoWidth'   : false,
+            'order'       : [[1, 'desc']]
+        });
+        $('#sales_table').DataTable({
+            'paging'      : true,
+            'lengthChange': false,
+            'searching'   : false,
+            'ordering'    : true,
+            'info'        : true,
+            'autoWidth'   : false,
+            'order'       : [[1, 'desc']]
+        });
+        $('#item_table').DataTable({
+            'paging'      : true,
+            'lengthChange': false,
+            'searching'   : false,
+            'ordering'    : true,
+            'info'        : true,
+            'autoWidth'   : false,
+            'order'       : [[0, 'desc']]
+        })
+    })
+</script>
+{% endblock %}

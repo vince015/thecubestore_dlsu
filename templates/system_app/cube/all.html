@@ -1,0 +1,100 @@
+{% extends "system_app/base.html" %}
+
+{% load staticfiles %}
+{% block pagetitle %}Cubes{% endblock %}
+
+{% block breadcrumb %}
+<h1>
+    Cubes
+    <small>ALL</small>
+</h1>
+<ol class="breadcrumb">
+    <li><a href="{% url 'dashboard' %}"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+    <li class="active">Cubes</li>
+</ol>
+{% endblock %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-body">
+                    <table id="cube_table" class="table table-bordered table-striped">
+                        <colgroup>
+                            <col style="width:20%">
+                            <col style="width:15%">
+                            <col style="width:15%">
+                            <col style="width:15%">
+                            <col style="width:15%">
+                            <col style="width:20%">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Unit</th>
+                                <th>Next Due Date</th>
+                                <th>Lease Start</th>
+                                <th>Lease End</th>
+                                <th>Monthly Rate</th>
+                                <th>Owner</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block pagescripts %}
+<script src="{% static "bower_components/datatables.net/js/jquery.dataTables.min.js" %}"></script>
+<script src="{% static "bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
+<script>
+    $(function () {
+        var dt_language = {
+            "emptyTable":     "{{ 'No data available in table' }}",
+            "info":           "{{ 'Showing _START_ to _END_ of _TOTAL_ entries' }}",
+            "infoEmpty":      "{{ 'Showing 0 to 0 of 0 entries' }}",
+            "infoFiltered":   "{{ '(filtered from _MAX_ total entries)' }}",
+            "infoPostFix":    "",
+            "thousands":      ",",
+            "lengthMenu":     "{{ 'Show _MENU_ entries' }}",
+            "loadingRecords": "{{ 'Loading...' }}",
+            "processing":     "{{ 'Processing...' }}",
+            "search":         "{{ 'Search:' }}",
+            "zeroRecords":    "{{ 'No matching records found' }}",
+            "paginate": {
+                "first":      "{{ 'First' }}",
+                "last":       "{{ 'Last' }}",
+                "next":       "{{ 'Next' }}",
+                "previous":   "{{ 'Previous' }}"
+            },
+            "aria": {
+                "sortAscending":  "{{ ': activate to sort column ascending' }}",
+                "sortDescending": "{{ ': activate to sort column descending' }}"
+            }
+        }
+
+        $('#cube_table').dataTable({
+            order: [[1, 'desc']],
+            language: dt_language,
+            lengthMenu: [[25, 50, 100, 200], [25, 50, 100, 200]],
+            columnDefs: [
+                {
+                    orderable: true,
+                    searchable: true,
+                    className: "center",
+                    targets: [0, 1]
+                }
+            ],
+            searching: true,
+            processing: true,
+            serverSide: true,
+            stateSave: true,
+            ajax: "{% url 'cubes_json' %}"
+        });
+
+    })
+</script>
+{% endblock %}

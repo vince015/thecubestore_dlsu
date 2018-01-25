@@ -1,0 +1,206 @@
+{% extends "system_app/base.html" %}
+
+{% load mathfilters %}
+{% load staticfiles %}
+{% block pagetitle %}Dashboard{% endblock %}
+
+{% block pagestylesheets %}
+<style type="text/css">
+    .table-hover
+    {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<h1>
+    Dashboard
+</h1>
+<ol class="breadcrumb">
+    <li class="active"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+</ol>
+{% endblock %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header">
+                    <div class="input-group">
+                        <input type="text"
+                               class="form-control"
+                               placeholder="Search"
+                               name="q"
+                               id="search-box">
+                        <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                    </div>
+                </div>
+                <div class="box-body">
+                    <table class="table table-bordered table-striped table-hover">
+                        <colgroup>
+                            <col style="width:10%">
+                            <col style="width:65%">
+                            <col style="width:10%">
+                            <col style="width:15%">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Desciption</th>
+                                <th>Stock</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody id="search-results">
+                            {% for item in items %}
+                                <tr onclick="itemSelect({{ item.id }})">
+                                    <td>
+                                        {{ item.code }}
+                                    </td>
+                                    <td>
+                                        {{ item.description }}
+                                    </td>
+                                    <td>
+                                        <!-- number of items in the inventory -->
+                                        {{ item.quantity }}
+                                    </td>
+                                    <td>
+                                        {{ item.price }}
+                                    </td>
+                                </tr>
+                            {% endfor%}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="dialog-confirm">
+</div>
+{% endblock %}
+
+{% block pagescripts %}
+<script src="{% static "bower_components/datatables.net/js/jquery.dataTables.min.js" %}"></script>
+<script src="{% static "bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
+<script>
+    function itemSelect(id)
+    {
+        $.ajax({
+            type: "GET",
+            url: "/system/buy/" + id,
+            success: buySuccess,
+            dataType: "html"
+        })
+    }
+    function buySuccess(data, textStatus, jqXHR)
+    {
+        $("#dialog-confirm").html(data).modal('show');
+        getFinalPrice();
+
+        $("#quantityInput").on('change', function() {
+            getFinalPrice();
+        });
+
+        $("#discountInput").on('change', function() {
+            getFinalPrice();
+        });
+    }
+    function getFinalPrice()
+    {
+        var item_price = parseFloat($('#item-price').text());
+        var item_discount = parseFloat($('#discountInput').val()) * 0.01;
+        var item_quantity = parseFloat($('#quantityInput').val());
+        var discounted_price_per_item = item_price - (item_price * item_discount);
+        var final_price = discounted_price_per_item * item_quantity;
+
+        $('#target-item-final_price').text(final_price.toFixed(2));
+    }
+
+
+    $("#search-box").keyup(function() {
+        $("#search-results").html("<tr><i class='fa fa-refresh fa-spin'></i></tr>");
+        $.ajax({
+            type: "GET",
+            url: "{% url 'search' %}",
+            data: {
+                "q": $(this).val(),
+            },
+            success: itemSearchResult,
+            dataType: "html"
+        });
+    });
+    function itemSearchResult(data, textStatus, jqXHR)
+    {
+        $("#search-results").html(data);
+    }
+
+    $(function () {
+        var target_form = null;
+
+        var dt_language = {
+            "emptyTable":     "{{ 'No data available in table' }}",
+            "info":           "{{ 'Showing _START_ to _END_ of _TOTAL_ entries' }}",
+            "infoEmpty":      "{{ 'Showing 0 to 0 of 0 entries' }}",
+            "infoFiltered":   "{{ '(filtered from _MAX_ total entries)' }}",
+            "infoPostFix":    "",
+            "thousands":      ",",
+            "lengthMenu":     "{{ 'Show _MENU_ entries' }}",
+            "loadingRecords": "{{ 'Loading...' }}",
+            "processing":     "{{ 'Processing...' }}",
+            "search":         "{{ 'Search:' }}",
+            "zeroRecords":    "{{ 'No matching records found' }}",
+            "paginate": {
+                "first":      "{{ 'First' }}",
+                "last":       "{{ 'Last' }}",
+                "next":       "{{ 'Next' }}",
+                "previous":   "{{ 'Previous' }}"
+            },
+            "aria": {
+                "sortAscending":  "{{ ': activate to sort column ascending' }}",
+                "sortDescending": "{{ ': activate to sort column descending' }}"
+            }
+        }
+
+        $('#sales_table').dataTable({
+            order: [[1, 'desc']],
+            language: dt_language,
+            lengthMenu: [[25, 50, 100, 200], [25, 50, 100, 200]],
+            columnDefs: [
+                {
+                    orderable: true,
+                    searchable: true,
+                    className: "center",
+                    targets: [0, 1]
+                }
+            ],
+            searching: true,
+            processing: true,
+            serverSide: true,
+            stateSave: true,
+            ajax: "{% url 'sales_json' %}"
+        });
+
+        $('#merchants_table').DataTable({
+            'paging'      : true,
+            'lengthChange': false,
+            'searching'   : true,
+            'ordering'    : true,
+            'info'        : true,
+            'autoWidth'   : false,
+            'order'       : [[3, 'desc']]
+        });
+
+        $('#payout_table').DataTable({
+            'paging'      : true,
+            'lengthChange': false,
+            'searching'   : true,
+            'ordering'    : true,
+            'info'        : true,
+            'autoWidth'   : false,
+            'order'       : [[2, 'desc']]
+        });
+    })
+</script>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "system_app/base.html" %}
+
+{% load staticfiles %}
+{% block pagetitle %}Payouts{% endblock %}
+
+{% block breadcrumb %}
+<h1>
+    Payouts
+    <small>DETAIL</small>
+</h1>
+<ol class="breadcrumb">
+    <li><a href="{% url 'dashboard' %}"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+    <li><a href="{% url 'payout_all' %}">Payouts</a></li>
+    <li class="active">Detail</li>
+</ol>
+{% endblock %}
+
+{% block main %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="box">
+            <div class="box-body">
+                <ul class="list-group list-group-unbordered">
+                    <li class="list-group-item">
+                        <b>Payout ID</b>
+                        <span class="pull-right text-muted">{{ payout.id }}</span>
+                    </li>
+                    {% if payout.merchant %}
+                    <li class="list-group-item">
+                        <b>Merchant Name</b>
+                        <a href="{% url 'merchant_detail' user_id=payout.merchant.id %}" class="pull-right">
+                            <b>
+                            {{ payout.merchant.first_name }}
+                            {{ payout.merchant.last_name }}
+                            </b>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="list-group-item">
+                        <b>Reference Number</b>
+                        <span class="pull-right text-muted">{{ payout.reference_number }}</span>
+                    </li>
+                    <li class="list-group-item">
+                        <b>Date</b>
+                        <span class="pull-right text-muted">{{ payout.date }}</span>
+                    </li>
+                    <li class="list-group-item">
+                        <b>Amount</b>
+                        <span class="pull-right text-muted">{{ payout.amount }}</span>
+                    </li>
+                    {% if payout.bank %}
+                    <li class="list-group-item">
+                        <b>Bank Account</b>
+                        <span class="pull-right text-muted">
+                            {{ payout.bank.bank }} ({{ payout.bank.account }})
+                        </span>
+                    </li>
+                    <li class="list-group-item">
+                        <b>Bank Account Owner</b>
+                        <span class="pull-right text-muted">{{ payout.bank.owner }}</span>
+                    </li>
+                    {% endif %}
+                    <li class="list-group-item">
+                        <b>Remarks</b>
+                        <span class="pull-right text-muted">{{ payout.remarks }}</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="box-footer">
+                <a href="{% url 'payout_edit' payout_id=payout.id %}">Edit</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <a href="{% url 'payout_delete' payout_id=payout.id %}">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="box">
+            <div class="box-header with-border">
+                <h3 class="box-title">Total sales: {{ sum }} </h3>
+                <button type="button" class="btn btn-default pull-right">
+                    <a href="{% url 'sales_pay' payout_id=payout.id %}" class="pull-right">
+                        <i class="fa fa-plus"></i> Add
+                    </a>
+                </button>
+            </div>
+            {% if sales %}
+            <div class="box-body">
+                <table id="sale_table" class="table table-bordered table-striped">
+                    <colgroup>
+                        <col style="width:20%">
+                        <col style="width:25%">
+                        <col style="width:5%">
+                        <col style="width:25%">
+                        <col style="width:25%">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Item Code</th>
+                            <th>Date</th>
+                            <th>Qty</th>
+                            <th>Gross</th>
+                            <th>Net</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block pagescripts %}
+<script src="{% static "bower_components/datatables.net/js/jquery.dataTables.min.js" %}"></script>
+<script src="{% static "bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js" %}"></script>
+<script>
+    $(function () {
+        var dt_language = {
+            "emptyTable":     "{{ 'No data available in table' }}",
+            "info":           "{{ 'Showing _START_ to _END_ of _TOTAL_ entries' }}",
+            "infoEmpty":      "{{ 'Showing 0 to 0 of 0 entries' }}",
+            "infoFiltered":   "{{ '(filtered from _MAX_ total entries)' }}",
+            "infoPostFix":    "",
+            "thousands":      ",",
+            "lengthMenu":     "{{ 'Show _MENU_ entries' }}",
+            "loadingRecords": "{{ 'Loading...' }}",
+            "processing":     "{{ 'Processing...' }}",
+            "search":         "{{ 'Search:' }}",
+            "zeroRecords":    "{{ 'No matching records found' }}",
+            "paginate": {
+                "first":      "{{ 'First' }}",
+                "last":       "{{ 'Last' }}",
+                "next":       "{{ 'Next' }}",
+                "previous":   "{{ 'Previous' }}"
+            },
+            "aria": {
+                "sortAscending":  "{{ ': activate to sort column ascending' }}",
+                "sortDescending": "{{ ': activate to sort column descending' }}"
+            }
+        }
+
+        $('#sale_table').dataTable({
+            order: [[1, 'desc']],
+            language: dt_language,
+            lengthMenu: [[25, 50, 100, 200], [25, 50, 100, 200]],
+            columnDefs: [
+                {
+                    orderable: true,
+                    searchable: true,
+                    className: "center",
+                    targets: [0, 1]
+                }
+            ],
+            searching: false,
+            processing: true,
+            serverSide: true,
+            stateSave: false,
+            ajax: "{% url 'payout_sales_json' payout_id=payout.id %}"
+        });
+    })
+</script>
+{% endblock %}
